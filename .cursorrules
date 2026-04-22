@@ -1,0 +1,26 @@
+# AI-Travel Buddy | Master Development Rules
+
+## 🐍 FastAPI & Python Standartları
+- **Expert Level:** Python, FastAPI ve ölçeklenebilir API geliştirme prensiplerine uyun.
+- **RORO Pattern:** "Receive an Object, Return an Object" (Obje Al, Obje Dön) modelini uygulayın.
+- **Functional Approach:** Mümkün olduğunca sınıflardan kaçının; fonksiyonel ve deklaratif programlamayı tercih edin.
+- **Naming:** Değişken isimlerinde yardımcı fiiller kullanın (örn: `is_active`, `has_permission`). Dosya isimleri `snake_case` olmalıdır.
+- **Async:** I/O işlemleri (DB, API) için her zaman `async def` kullanın. Saf fonksiyonlar için `def` yeterlidir.
+- **Type Hints:** Tüm fonksiyon imzalarında tip belirtimi zorunludur. Pydantic modellerini ham sözlüklere (dict) tercih edin.
+
+## 🛡️ Hata Yönetimi ve Validasyon
+- **Early Return:** Hataları ve uç durumları (edge cases) fonksiyonun en başında yönetin.
+- **Happy Path:** Ana işlem akışını (başarılı senaryo) fonksiyonun en sonuna koyun.
+- **Guard Clauses:** Geçersiz durumları erkenden yakalamak için guard clause yapılarını kullanın.
+- **Custom Errors:** `HTTPException` kullanın ve hataları seyahat temalı mesajlarla (`travel_messages.py`) özelleştirin.
+
+## ⚡ Performans ve Mimari
+- **Lifespan:** Startup/Shutdown işlemleri için `@app.on_event` yerine `lifespan` context manager tercih edin.
+- **Dependency Injection:** State yönetimi ve paylaşılan kaynaklar için FastAPI'nin `Depends` sistemini kullanın.
+- **Caching:** Sık erişilen veriler için Redis kullanarak I/O yükünü minimize edin.
+- **SQLAlchemy 2.0:** ORM kullanırken asenkron sürücüleri (`asyncpg`) ve 2.0 standartlarını uygulayın.
+
+## 🤖 AI & Veri Disiplini (Travel-Buddy Özel)
+- **Hallucination Guard:** Üretilen her AI claim'i bir `source_id` ile eşleşmelidir.
+- **Recency Bias:** Puanlama algoritması: $Score = (Recent \times 0.7) + (Old \times 0.3)$ formülüne sadık kalmalıdır.
+- **Redis TTL:** AI analizleri tam 7 gün boyunca cache'lenmelidir.
