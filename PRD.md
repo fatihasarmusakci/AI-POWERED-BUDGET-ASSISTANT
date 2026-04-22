@@ -1,95 +1,87 @@
-# PRD: ParaNerede? (AI-Powered Budget Assistant) 
-**Sürüm:** 1.0 (MVP)  
-**Durum:** Hazır / Geliştirme Aşamasında  
-**Rol:** Kıdemli Ürün Uzmanı & CPO Vizyonu
+# 🚀 Product Requirements Document (PRD): AI-Travel Buddy
+**Proje Kodu:** TRVL-AI-MVP-001  
+**Versiyon:** 1.0 (MVP)  
+**Doküman Sahibi:** Ürün Uzmanı (CPO)  
+**Tarih:** 22 Nisan 2026  
+**Durum:** Hazır (Development Ready)
 
-## 1. Ürün Vizyonu ve Değer Önerisi
-* **Vizyon:** Ekonomik belirsizlik dönemlerinde kullanıcıya saniyeler içinde mali kontrol hissi veren en hızlı asistan olmak.
-* **Temel Değer:** "10 saniyede harcamanı kaydet, ay sonu sürprizlerinden kurtul."
+---
 
-## 2. Hedef Metrikler (KPIs)
-* **Time-to-Log (T2L):** Harcama giriş süresinin 8 saniyenin altında tutulması.
-* **Retention (D7):** Kullanıcıların %40'ının 7. günde uygulamayı aktif kullanması.
-* **Data Accuracy:** AI tarafından ayrıştırılan verilerin %95 doğruluk payı.
+## 1. Executive Summary (Yönetici Özeti)
+### 1.1. Problem
+Seyahat planlayan kullanıcılar, yüzlerce çelişkili otel yorumu arasında kaybolmakta ("Choice Paralysis"). Geleneksel puanlama sistemleri (4.5/5 gibi) güncelliğini yitirmiş veya manipüle edilmiş olabiliyor.
+### 1.2. Çözüm
+AI-Travel Buddy, son 6 aydaki kullanıcı yorumlarını doğal dil işleme (NLP) ile analiz ederek; Temizlik, Çocuk, Yemek ve Gürültü gibi kritik kategorilerde objektif ve dinamik skorlar üretir. 
+### 1.3. Hedef (North Star)
+Kullanıcının karar verme süresini %50 azaltmak ve "Günün İpucu" özelliği ile seyahat dışı dönemlerde de etkileşim (retention) yaratmak.
 
-## 3. Kullanıcı Hikayeleri (User Stories)
+---
 
-| ID | Kullanıcı Hikayesi | Kabul Kriterleri (Acceptance Criteria) |
-| :--- | :--- | :--- |
-| **US.01** | Bir kullanıcı olarak kopyaladığım banka SMS'inin otomatik algılanmasını istiyorum. | 1. Uygulama açıldığında Clipboard kontrol edilir. <br> 2. SMS kalıbı uygunsa onay modalı çıkar. |
-| **US.02** | Bir kullanıcı olarak fiş fotoğrafı çekerek harcama girmek istiyorum. | 1. OCR + GPT-4o-mini entegrasyonu ile veri çekilir. <br> 2. Tutar, kategori ve işyeri otomatik atanır. |
-| **US.03** | Bir kullanıcı olarak "Güvenli Limitimi" anlık görmek istiyorum. | 1. Maaş günü ve sabit giderlere göre günlük bütçe hesaplanır. <br> 2. Her harcamada bu limit real-time güncellenir. |
+## 2. Kullanıcı Senaryoları (User Stories)
+| ID | User Role | Requirement | Benefit |
+| :--- | :--- | :--- | :--- |
+| **US.1** | Gezgin | Otel yorumlarının özetini görmek isterim | Saatlerce okuma yapmadan hızlı karar verebilmek için. |
+| **US.2** | Ebeveyn | "Çocuk dostu" skorunu görmek isterim | Çocuğumla konforlu bir tatil geçireceğimden emin olmak için. |
+| **US.3** | Tekrar Eden Kullanıcı | Her gün yeni bir seyahat ipucu/fırsatı almak isterim | Uygulamayı sadece tatil planlarken değil, her gün kullanmak için. |
 
-## 4. Teknik Gereklilikler & Mimari
+---
+
+## 3. MVP Özellik Seti (Must-Have)
+
+### 3.1. AI Analiz & Skorlama Motoru (Core)
+* **Veri Ingestion:** Google Places/TripAdvisor üzerinden çekilen son 50 yorumun analizi.
+* **Dinamik Puanlama:** Son 6 ayın verisine %70 ağırlık veren ağırlıklı ortalama algoritması.
+* **AI Özet Kartları:** LLM tarafından üretilen 3 maddelik "Neden Bu Otel?" özeti.
+* **Duygu Doğrulama:** Puanların altında kanıt olarak gösterilen 140 karakterlik gerçek yorum snippet'ları.
+
+### 3.2. Günlük Etkileşim Modülü (Retention)
+* **Günün Fırsat Analizi:** Belirli bölgelerdeki Fiyat/Performans lideri otellerin listelenmesi.
+* **AI Seyahat Hackleri:** Günlük mikro-bilgiler (Örn: "Uçakta en iyi uyku için hangi koltuk seçilmeli?").
+
+---
+
+## 4. Teknik Mimari ve Gereklilikler
 
 ### 4.1. Teknoloji Stack
-- **Frontend:** React Native (Expo) - Hızlı prototipleme ve Cross-platform desteği.
-- **Veritabanı:** WatermelonDB (SQLite tabanlı) - Local-first ve yüksek performanslı gözlemleme.
-- **AI Engine:** OpenAI `gpt-4o-mini` - Hız ve maliyet optimizasyonu için.
-- **State Management:** Zustand - Hafif ve hızlı state yönetimi.
+* **AI:** GPT-4o (Derin analiz) & Claude 3 Haiku (Hızlı/Ekonomik özetler).
+* **Backend:** Python 3.10+ (FastAPI).
+* **Frontend:** Flutter (Cross-platform iOS/Android).
+* **Database:** PostgreSQL (User data) + Pinecone (Vector Search).
+* **Infrastructure:** Redis (7 günlük analiz önbelleği için).
 
-### 4.2. Veri Modeli (Schema)
-```sql
-Table transactions {
-  id: uuid [primary key]
-  amount: decimal (cents) // 100.50 TL -> 10050
-  category: enum (Food, Transport, Rent, Health, etc.)
-  merchant: string
-  source: enum (SMS, VISION, MANUAL)
-  created_at: timestamp
-}
+### 4.2. API Tanımları
+* **Endpoint:** `GET /v1/analysis/{hotel_id}`
+* **Latency Target:** < 5 saniye (P95).
+* **Caching:** Aynı otel için 7 gün boyunca cache'lenmiş sonuç döndürülecek.
 
-Table user_config {
-  id: uuid
-  monthly_income: decimal
-  fixed_expenses: decimal
-  payday: integer (1-31)
-}
+---
 
-4.3. AI Veri İşleme Akışı
-Girdi: Ham SMS metni veya base64 formatında sıkıştırılmış fiş görseli.
+## 5. Kabul Kriterleri (Acceptance Criteria)
+* **AC.1:** Sistem, 50 yorumu 5 saniyeden kısa sürede analiz edip kategorize etmeli.
+* **AC.2:** AI özetleri, orijinal metinle %95 oranında semantik doğruluk sağlamalı (Halüsinasyon kontrolü).
+* **AC.3:** Kullanıcı ilgi alanı seçtiğinde (örn: Sessizlik), liste buna göre re-rank edilmeli.
 
-İşlem: gpt-4o-mini modeline gönderilen sistem promptu ile JSON çıktısı zorlaması.
+---
 
-Çıktı Formatı:
+## 6. Başarı Metrikleri (KPIs)
+1.  **Retention:** DAU/MAU oranının %10+ olması.
+2.  **Trust Score:** Kullanıcıların AI özetlerini "Faydalı" işaretleme oranının %80+ olması.
+3.  **Speed to Insight:** Kullanıcının analiz ekranında geçirdiği sürenin 30 saniyenin altında olması (Hızlı bilgi tüketimi).
 
-JSON
+---
 
-{
-  "amount": 245.50,
-  "merchant": "MIGROS",
-  "category": "Market",
-  "confidence_score": 0.98
-}
-5. Fonksiyonel Detaylar & UX Kuralları
-5.1. "Safe-to-Spend" Algoritması
-Sistemin kalbi olan algoritma her işlemde şu formülü çalıştırır:
-Günlük Limit = (Net Gelir - Sabit Giderler - Ay İçindeki Toplam Harcama) / Maaşa Kalan Gün Sayısı
+## 7. Kapsam Dışı (Out of Scope - Phase 2)
+* Doğrudan otel rezervasyonu ve ödeme işlemleri.
+* Uçak bileti ve araç kiralama modülleri.
+* Social Feed (Kullanıcıların birbirini takip etmesi).
 
-5.2. Gamification (Retention)
-Daily Streak: Her gün en az 1 kayıt giren kullanıcıya "Ateş" (Streak) ikonu gösterilir.
+---
 
-Lock System: Haftalık harcama analizi raporu, sadece 7 günlük streak yapan kullanıcılara açılır.
+## 8. Kritik Riskler ve Önlemler
+* **Risk:** Yüksek API Maliyetleri. 
+* **Önlem:** Popüler lokasyonların analizlerini Redis üzerinde agresif şekilde cache'lemek.
+* **Risk:** Yanlış/Eski Yorum Analizi.
+* **Önlem:** Analiz algoritmasında "Recency Bias" (Güncellik önceliği) kullanarak eski veriyi filtrelemek.
 
-5.3. Hata Yönetimi (Edge Cases)
-Offline Mod: İnternet yoksa fiş tarama işlemi kuyruğa alınır (Queue), manuel giriş engellenmez.
-
-Duplicate Check: Son 10 dakika içinde girilen aynı tutarlı harcamalar için "Mükerrer olabilir" uyarısı verilir.
-
-6. Uygulama Yol Haritası (Roadmap)
-Hafta 1: Temel CRUD işlemleri ve Local DB kurulumu.
-
-Hafta 2: AI Entegrasyonu (Vision + SMS Analiz).
-
-Hafta 3: Dashboard tasarımı ve Safe-to-Spend algoritması.
-
-Hafta 4: Bildirimler, Gamification ve Test (Beta Launch).
-
-7. Geliştirici İçin Başlangıç Komutu (Cursor Prompt)
-"React Native + WatermelonDB kullanarak local-first bir bütçe uygulaması iskeleti oluştur. Ana sayfada 'Safe-to-Spend' hesaplamasını gösteren bir kart olsun. Pano (Clipboard) dinleyicisi ekle; içinde 'TL' ve 'Harcama' geçen bir metin bulursan bunu analiz edip kullanıcıya onaylatacak bir BottomSheet aç. UI için modern, minimalist ve koyu tema tercih et."
-### **Nasıl Kullanılır?**
-1.  Yukarıdaki metni kopyalayın.
-2.  `.md` uzantılı bir dosya olarak kaydedin (Örn: `PARA_NEREDE_PRD.md`).
-3.  Projenin ana klasörüne veya dokümantasyon klasörüne ekleyin.
-
-Bu döküman, hem iş biriminin beklentilerini hem de yazılımcının ihtiyaç duyduğu teknik derinliği bir araya getirerek projenin **"unicorn hızıyla"** ilerlemesini sağlayacaktır. Başka bir detay eklememi ister misin?
+---
+*Bu doküman "AI-Travel Buddy" projesinin teknik ve ürün temelini oluşturur. Değişiklikler için CPO onayı gereklidir.*
