@@ -1,9 +1,7 @@
 # 🚀 Product Requirements Document (PRD): AI-Travel Buddy
 **Proje Kodu:** TRVL-AI-MVP-001  
 **Versiyon:** 1.0 (MVP)  
-**Doküman Sahibi:** Ürün Uzmanı (CPO)  
-**Tarih:** 22 Nisan 2026  
-**Durum:** Hazır (Development Ready)
+
 
 ---
 
