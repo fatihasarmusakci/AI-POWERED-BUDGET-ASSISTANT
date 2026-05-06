@@ -1,0 +1,46 @@
+@import './design-system/tokens.css';
+@import './components/ui/primitives.css';
+
+h1 {
+  margin: 0.5rem 0;
+  font-size: 1.4rem;
+}
+
+h2,
+h3 {
+  margin: 0 0 0.75rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--muted);
+}
+
+.photo-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.photo-date {
+  color: var(--muted);
+  font-size: 0.8rem;
+}

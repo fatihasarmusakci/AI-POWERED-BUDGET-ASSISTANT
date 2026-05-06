@@ -1,0 +1,15 @@
+:root {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --text: #121723;
+  --muted: #5a667e;
+  --line: #d9deea;
+  --primary: #265df2;
+  --primary-soft: #eaf0ff;
+  --radius: 14px;
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --font-size-sm: 0.85rem;
+  --font-size-md: 1rem;
+}

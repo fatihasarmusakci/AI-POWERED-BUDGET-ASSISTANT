@@ -1,0 +1,129 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+#root {
+  max-width: 560px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.hero-card,
+.panel,
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.hero-card,
+.panel,
+.card {
+  padding: var(--space-3);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.two-col {
+  grid-template-columns: 1fr;
+}
+
+.step-row,
+.hotel-switch {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.hotel-switch {
+  overflow-x: auto;
+}
+
+.chip,
+.hotel-tab,
+.cta-button {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  padding: 0.45rem 0.8rem;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.chip-active,
+.hotel-tab-active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.cta-button {
+  border-radius: 10px;
+  border: 0;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.secondary-button {
+  background: #0f172a;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.status {
+  font-size: 0.9rem;
+}
+
+.photo-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.photo-box {
+  min-height: 110px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 0.6rem;
+  display: grid;
+  align-content: space-between;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.4rem 0.65rem;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.8rem;
+}
+
+@media (min-width: 760px) {
+  #root {
+    max-width: 860px;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
