@@ -13,6 +13,10 @@ class HotelAnalysisRequest(BaseModel):
         min_length=1,
         description="Analiz edilecek otel yorumları listesi",
     )
+    preferences: dict[str, Any] | None = Field(
+        default=None,
+        description="Kullanıcı seçimleri (travel_style, priority, non_negotiable, persona).",
+    )
 
 
 class HotelAnalysisResponse(BaseModel):
@@ -34,6 +38,16 @@ class HotelAnalysisResponse(BaseModel):
         le=5,
         description="Sessizlik skoru (1-5 arası)",
     )
+
+    service_score: int = Field(..., ge=1, le=5, description="Personel/servis kalitesi (1-5)")
+    location_score: int = Field(..., ge=1, le=5, description="Konum avantajı (1-5)")
+    wifi_score: int = Field(..., ge=1, le=5, description="Wi-Fi kalitesi/güvenilirliği (1-5)")
+    breakfast_score: int = Field(..., ge=1, le=5, description="Kahvaltı kalitesi (1-5)")
+    family_friendly_score: int = Field(..., ge=1, le=5, description="Aile/çocuk dostu uygunluk (1-5)")
+    entertainment_score: int = Field(..., ge=1, le=5, description="Eğlence/aktivite imkanları (1-5)")
+    room_comfort_score: int = Field(..., ge=1, le=5, description="Oda konforu/rahatlık (1-5)")
+    value_for_money_score: int = Field(..., ge=1, le=5, description="Fiyat/performans değeri (1-5)")
+
     pros: list[str] = Field(
         ...,
         description="Otelin olumlu özellikleri",

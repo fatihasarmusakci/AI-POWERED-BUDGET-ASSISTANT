@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-1.5-flash"
 
+    foursquare_api_key: str | None = None
+    foursquare_api_base_url: str = "https://places-api.foursquare.com"
+    foursquare_api_version: str = "2025-06-17"
+    # Backward-compatible env name support for existing .env files
+    foursquare_base_url: str | None = None
+
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/0"
     celery_eager: bool = Field(

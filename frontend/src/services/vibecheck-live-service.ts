@@ -1,56 +1,86 @@
 import type { VibecheckService } from './vibecheck-service'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const buildMapsUrl = (name: string, address: string) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} ${address} otel`)}`
 
 export const vibecheckLiveService: VibecheckService = {
-  getBundle: async () => {
-    const [hotelsResponse, insightResponse] = await Promise.all([
-      fetch(`${API_BASE}/hotels?city=london`),
-      fetch(`${API_BASE}/insights/daily?city=london`),
-    ])
+  getBundle: async (city: string) => {
+    const hotelsResponse = await fetch(
+      `${API_BASE}/places/hotels?city=${encodeURIComponent(city)}&limit=6&light=true`,
+    )
 
-    if (!hotelsResponse.ok || !insightResponse.ok) {
-      throw new Error('Failed to fetch live data')
+    if (!hotelsResponse.ok) {
+      let detail = 'Otel verisi alınamadı.'
+      try {
+        const errBody = (await hotelsResponse.json()) as { detail?: string }
+        if (errBody.detail) {
+          detail = errBody.detail
+        }
+      } catch {
+        // ignore parse errors
+      }
+      throw new Error(detail)
     }
 
     const hotelsData = (await hotelsResponse.json()) as {
       items: Array<{
-        id: string
+        place_id: string
         name: string
-        district: string
-        smart_score: number
+        address: string
+        rating?: number | null
+        user_rating_count?: number | null
+        booking_url?: string | null
+        reviews: string[]
+        analysis: {
+          cleaning_score: number
+          quietness_score: number
+          wifi_score: number
+          pros: string[]
+          cons: string[]
+        }
       }>
     }
-    const insightData = (await insightResponse.json()) as {
-      city: string
-      message: string
+
+    if (!Array.isArray(hotelsData.items) || hotelsData.items.length === 0) {
+      throw new Error(`${city} için canlı otel verisi bulunamadı.`)
     }
 
     return {
-      personas: ['Quiet Seeker', 'Social Butterfly', 'Productivity Focused'],
+      dataSource: 'live' as const,
+      personas: ['Sakin Tatilci', 'Sosyal Kaşif', 'Verim Odaklı'],
       hotels: hotelsData.items.map((item) => ({
-        id: item.id,
+        id: item.place_id,
         name: item.name,
-        district: item.district,
-        officialPhotoLabel: 'Official: Gallery photo',
-        userPhotoLabel: 'User: Recent unfiltered upload',
-        officialDate: '2025-01-10',
-        userDate: '2026-04-21',
-        smartScore: item.smart_score,
-        wifiScore: 8,
-        sleepScore: 8,
-        socialScore: 8,
-        flags: ['Live integration placeholder'],
-        summary: 'Live summary will be fed from /hotels/{id}/summary endpoint.',
+        district: item.address || city,
+        officialPhotoLabel: 'Resmi bilgi',
+        userPhotoLabel: 'Kullanıcı yorum özeti',
+        bookingUrl:
+          item.booking_url && !item.booking_url.includes('foursquare.com/placemakers')
+            ? item.booking_url
+            : buildMapsUrl(item.name, item.address || city),
+        highlights: item.analysis.pros.slice(0, 3),
+        amenities: [
+          item.rating ? `Foursquare puanı: ${item.rating}/10` : 'Otel kaydı doğrulandı',
+          item.user_rating_count ? `${item.user_rating_count} değerlendirme` : 'Değerlendirme sayısı yok',
+          'Harita üzerinden rezervasyon',
+        ],
+        officialDate: new Date().toISOString().slice(0, 10),
+        userDate: new Date().toISOString().slice(0, 10),
+        smartScore: Number(
+          ((item.analysis.cleaning_score + item.analysis.quietness_score + item.analysis.wifi_score) / 1.5).toFixed(1),
+        ),
+        wifiScore: item.analysis.wifi_score,
+        sleepScore: item.analysis.quietness_score,
+        socialScore: 7,
+        reviews: item.reviews,
+        flags: item.analysis.cons.slice(0, 3),
+        summary: item.analysis.pros.slice(0, 3).join(' ') || `${item.name} için canlı veri özeti.`,
       })),
-      mapLayers: [
-        { id: 'quiet', label: 'Quiet zone', emoji: 'Q' },
-        { id: 'party', label: 'Party zone', emoji: 'P' },
-        { id: 'metro', label: 'Near metro', emoji: 'M' },
-      ],
+      mapLayers: [],
       insight: {
-        city: insightData.city,
-        message: insightData.message,
+        city,
+        message: `${city} için Foursquare araması tamamlandı (hafif mod — fotoğraf API'si kullanılmadı).`,
       },
       staycation: {
         coworking: 8.5,

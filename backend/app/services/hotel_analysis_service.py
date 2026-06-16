@@ -21,21 +21,37 @@ Görevin:
 1. Temizlik durumunu 1-5 arası puanla (1: çok kötü, 5: mükemmel)
 2. Otelin çocuk parkı/oyun alanı olup olmadığını tespit et (boolean)
 3. Otelin sessizlik durumunu 1-5 arası puanla (1: çok gürültülü, 5: çok sessiz)
-4. Yorumlardaki olumlu özellikleri pros listesine ekle
-5. Yorumlardaki olumsuz özellikleri cons listesine ekle
+4. Personel/servis kalitesini 1-5 arası puanla
+5. Konum avantajını 1-5 arası puanla
+6. Wi-Fi kalitesi/güvenilirliğini 1-5 arası puanla
+7. Kahvaltı kalitesini 1-5 arası puanla
+8. Aile/çocuk dostu uygunluğu 1-5 arası puanla
+9. Eğlence/aktivite imkanlarını 1-5 arası puanla
+10. Oda konforunu/rahatlığını 1-5 arası puanla
+11. Fiyat/performans değerini 1-5 arası puanla
+12. Yorumlardaki olumlu özellikleri pros listesine ekle
+13. Yorumlardaki olumsuz özellikleri cons listesine ekle
 
 Çıktı formatı (tam olarak bu JSON yapısı):
 {
   "cleaning_score": 1-5 arası integer,
   "has_playground": boolean,
   "quietness_score": 1-5 arası integer,
+  "service_score": 1-5 arası integer,
+  "location_score": 1-5 arası integer,
+  "wifi_score": 1-5 arası integer,
+  "breakfast_score": 1-5 arası integer,
+  "family_friendly_score": 1-5 arası integer,
+  "entertainment_score": 1-5 arası integer,
+  "room_comfort_score": 1-5 arası integer,
+  "value_for_money_score": 1-5 arası integer,
   "pros": ["öne çıkan olumlu özellik 1", "öne çıkan olumlu özellik 2", ...],
   "cons": ["olumsuz özellik 1", "olumsuz özellik 2", ...]
 }
 
 Kurallar:
 - Sadece geçerli JSON döndür, başka metin ekleme
-- cleaning_score ve quietness_score mutlaka 1-5 arası integer olmalı
+- cleaning_score, quietness_score ve tüm score alanları mutlaka 1-5 arası integer olmalı
 - pros ve cons listeleri boş olabilir ama en az 3-5 madde eklemeye çalış
 - has_playground: çocuk parkı, oyun alanı, kids club vb. varsa true
 - Türkçe veya İngilizce yorumları analiz edebilmelisin
@@ -74,7 +90,7 @@ class HotelAnalysisService:
         else:
             logger.info("No Gemini API key provided, using mock mode")
 
-    def analyze_reviews(self, reviews: list[str]) -> dict[str, Any]:
+    def analyze_reviews(self, reviews: list[str], preferences: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Otel yorumlarını analiz et.
 
@@ -92,18 +108,21 @@ class HotelAnalysisService:
         """
         if self._use_mock:
             logger.info("Using mock mode for hotel analysis (no API key)")
-            return self._mock_analyze_reviews(reviews)
+            return self._mock_analyze_reviews(reviews, preferences)
 
         # Gerçek API çağrısı (API key varsa)
-        return self._real_api_analyze_reviews(reviews)
+        return self._real_api_analyze_reviews(reviews, preferences)
 
-    def _real_api_analyze_reviews(self, reviews: list[str]) -> dict[str, Any]:
+    def _real_api_analyze_reviews(self, reviews: list[str], preferences: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Gerçek Google Gemini API çağrısı.
         """
         try:
             # Yorumları tek metne birleştir
-            reviews_text = "\n---\n".join(reviews)
+            pref_text = ""
+            if preferences:
+                pref_text = f"\nKullanıcı tercihleri: {json.dumps(preferences, ensure_ascii=False)}\n"
+            reviews_text = pref_text + "\n---\n".join(reviews)
 
             # Gemini API çağrısı
             response = self._model_client.generate_content(
@@ -134,6 +153,14 @@ class HotelAnalysisService:
                 "cleaning_score": self._validate_score(data.get("cleaning_score", 3)),
                 "has_playground": bool(data.get("has_playground", False)),
                 "quietness_score": self._validate_score(data.get("quietness_score", 3)),
+                "service_score": self._validate_score(data.get("service_score", 3)),
+                "location_score": self._validate_score(data.get("location_score", 3)),
+                "wifi_score": self._validate_score(data.get("wifi_score", 3)),
+                "breakfast_score": self._validate_score(data.get("breakfast_score", 3)),
+                "family_friendly_score": self._validate_score(data.get("family_friendly_score", 3)),
+                "entertainment_score": self._validate_score(data.get("entertainment_score", 3)),
+                "room_comfort_score": self._validate_score(data.get("room_comfort_score", 3)),
+                "value_for_money_score": self._validate_score(data.get("value_for_money_score", 3)),
                 "pros": self._validate_list(data.get("pros", [])),
                 "cons": self._validate_list(data.get("cons", [])),
             }
@@ -142,9 +169,9 @@ class HotelAnalysisService:
 
         except Exception as exc:  # noqa: BLE001
             logger.warning("Gemini API failed, falling back to mock: %s", exc)
-            return self._mock_analyze_reviews(reviews)
+            return self._mock_analyze_reviews(reviews, preferences)
 
-    def _mock_analyze_reviews(self, reviews: list[str]) -> dict[str, Any]:
+    def _mock_analyze_reviews(self, reviews: list[str], preferences: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Mock analiz fonksiyonu - Gerçek API olmadığında çalışır.
         
@@ -172,7 +199,101 @@ class HotelAnalysisService:
         quiet_positive = sum(1 for kw in ["sessiz", "quiet", "sakin", "peaceful"] if kw in all_text)
         quiet_negative = sum(1 for kw in ["gürültü", "noise", "loud"] if kw in all_text)
         quietness_score = max(1, min(5, 3 + quiet_positive - quiet_negative))
+
+        # Ek skorlar (10 özellik)
+        service_positive = sum(
+            1 for kw in ["personel", "staff", "helpful", "friendly", "welcoming", "yardımsever"] if kw in all_text
+        )
+        service_negative = sum(1 for kw in ["kaba", "ilgisiz", "unfriendly", "rude"] if kw in all_text)
+        service_score = max(1, min(5, 3 + service_positive - service_negative))
+
+        location_positive = sum(
+            1 for kw in ["konum", "location", "merkez", "central", "near", "walkable"] if kw in all_text
+        )
+        location_negative = sum(1 for kw in ["uzak", "far", "noisy area", "zor"] if kw in all_text)
+        location_score = max(1, min(5, 3 + location_positive - location_negative))
+
+        wifi_positive = sum(1 for kw in ["wifi", "wi-fi", "internet", "signal", "fast", "stabil", "strong"] if kw in all_text)
+        wifi_negative = sum(1 for kw in ["yavaş", "slow", "çalışmıyor", "not working", "kopuyor", "drops"] if kw in all_text)
+        wifi_score = max(1, min(5, 3 + wifi_positive - wifi_negative))
+
+        breakfast_positive = sum(1 for kw in ["kahvaltı", "breakfast", "buffet", "breads", "eggs"] if kw in all_text)
+        breakfast_negative = sum(1 for kw in ["kötü kahvaltı", "worst breakfast", "soğuk", "bayat", "cold", "stale"] if kw in all_text)
+        breakfast_score = max(1, min(5, 3 + breakfast_positive - breakfast_negative))
+
+        family_positive = sum(
+            1
+            for kw in [
+                "çocuk",
+                "children",
+                "kids",
+                "kids club",
+                "oyun alanı",
+                "playground",
+                "family",
+                "aile",
+                "bebek",
+            ]
+            if kw in all_text
+        )
+        family_negative = sum(1 for kw in ["çocuk yok", "no kids", "kid not", "çocuk için uygun değil", "not family"] if kw in all_text)
+        family_friendly_score = max(1, min(5, 3 + family_positive + (1 if has_playground else 0) - family_negative))
+
+        entertainment_positive = sum(
+            1
+            for kw in [
+                "pool",
+                "havuz",
+                "spa",
+                "gym",
+                "fitness",
+                "entertainment",
+                "activity",
+                "etkinlik",
+                "animasyon",
+                "kids club",
+            ]
+            if kw in all_text
+        )
+        entertainment_negative = sum(1 for kw in ["sıkıcı", "boring", "hiç etkinlik", "no activities", "kapalı", "closed"] if kw in all_text)
+        entertainment_score = max(1, min(5, 3 + entertainment_positive - entertainment_negative))
+
+        room_positive = sum(
+            1
+            for kw in [
+                "rahat",
+                "comfortable",
+                "konfor",
+                "yatak",
+                "bed",
+                "temiz yatak",
+                "spacious",
+                "ferah",
+            ]
+            if kw in all_text
+        )
+        room_negative = sum(1 for kw in ["rahatsız", "uncomfortable", "yatak rahatsız", "küçük", "small", "sıcak", "cold"] if kw in all_text)
+        room_comfort_score = max(1, min(5, 3 + room_positive - room_negative))
+
+        value_positive = sum(1 for kw in ["fiyat", "price", "uygun", "affordable", "value", "değer", "good value"] if kw in all_text)
+        value_negative = sum(1 for kw in ["pahalı", "expensive", "overpriced", "para etmiyor", "not worth"] if kw in all_text)
+        value_for_money_score = max(1, min(5, 3 + value_positive - value_negative))
         
+        # Kullanıcı tercihleriyle ağırlıklandırma
+        if isinstance(preferences, dict):
+            priority = str(preferences.get("priority") or "")
+            non_negotiable = str(preferences.get("non_negotiable") or "")
+            travel_style = str(preferences.get("travel_style") or "")
+
+            if "Uyku" in priority:
+                quietness_score = min(5, quietness_score + 1)
+            if "Eğlence" in priority:
+                entertainment_score = min(5, entertainment_score + 1)
+            if "Temizlik" in non_negotiable:
+                cleaning_score = min(5, cleaning_score + 1)
+            if "Çocuk" in non_negotiable or "Aile" in travel_style:
+                family_friendly_score = min(5, family_friendly_score + 1)
+
         # Pros ve Cons çıkar
         pros = []
         cons = []
@@ -213,6 +334,14 @@ class HotelAnalysisService:
             "cleaning_score": cleaning_score,
             "has_playground": has_playground,
             "quietness_score": quietness_score,
+            "service_score": service_score,
+            "location_score": location_score,
+            "wifi_score": wifi_score,
+            "breakfast_score": breakfast_score,
+            "family_friendly_score": family_friendly_score,
+            "entertainment_score": entertainment_score,
+            "room_comfort_score": room_comfort_score,
+            "value_for_money_score": value_for_money_score,
             "pros": pros,
             "cons": cons,
         }

@@ -197,3 +197,39 @@ class StaycationRatingRequest(BaseModel):
 class StaycationRatingResponse(BaseModel):
     accepted: bool
     average_score: float
+
+
+class PlaceHotelAnalysis(BaseModel):
+    cleaning_score: int = Field(ge=1, le=5)
+    has_playground: bool
+    quietness_score: int = Field(ge=1, le=5)
+    service_score: int = Field(ge=1, le=5)
+    location_score: int = Field(ge=1, le=5)
+    wifi_score: int = Field(ge=1, le=5)
+    breakfast_score: int = Field(ge=1, le=5)
+    family_friendly_score: int = Field(ge=1, le=5)
+    entertainment_score: int = Field(ge=1, le=5)
+    room_comfort_score: int = Field(ge=1, le=5)
+    value_for_money_score: int = Field(ge=1, le=5)
+    pros: list[str]
+    cons: list[str]
+
+
+class PlaceHotelItem(BaseModel):
+    place_id: str
+    name: str
+    address: str
+    rating: float | None = None
+    user_rating_count: int | None = None
+    official_photo_url: str | None = None
+    user_photo_url: str | None = None
+    booking_url: str | None = None
+    reviews: list[str] = Field(default_factory=list)
+    analysis: PlaceHotelAnalysis
+
+
+class PlaceHotelListResponse(BaseModel):
+    city: str
+    country: str = "Türkiye"
+    provider: str = "foursquare"
+    items: list[PlaceHotelItem]

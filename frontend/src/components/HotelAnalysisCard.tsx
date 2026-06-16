@@ -1,36 +1,77 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { HotelAnalysisResponse } from '../types/hotelAnalysis'
 import { hotelAnalysisService } from '../services/hotelAnalysisService'
 import './HotelAnalysisCard.css'
 
 interface HotelAnalysisCardProps {
   reviews: string[]
+  analysisKey?: string
+  preferences?: {
+    travel_style?: string
+    priority?: string
+    non_negotiable?: string
+    persona?: string
+  }
 }
 
-export default function HotelAnalysisCard({ reviews }: HotelAnalysisCardProps) {
+export default function HotelAnalysisCard({ reviews, analysisKey, preferences }: HotelAnalysisCardProps) {
   const [analysis, setAnalysis] = useState<HotelAnalysisResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [manualRefreshCount, setManualRefreshCount] = useState(0)
+  const latestSignatureRef = useRef('')
+  const signature = useMemo(
+    () => JSON.stringify({ analysisKey: analysisKey ?? '', reviews, preferences }),
+    [analysisKey, preferences, reviews],
+  )
+  latestSignatureRef.current = signature
 
-  const handleAnalyze = async () => {
+  const runAnalysis = async (requestSignature: string) => {
     if (reviews.length === 0) {
+      setAnalysis(null)
       setError('Analiz için en az bir yorum gerekli')
+      setLoading(false)
       return
     }
-
     setLoading(true)
     setError(null)
-    
+
     try {
-      const result = await hotelAnalysisService.analyzeReviews({ reviews })
+      const result = await hotelAnalysisService.analyzeReviews({
+        reviews,
+        preferences: {
+          ...preferences,
+          analysis_key: analysisKey,
+        },
+      })
+      // Bu sırada otel/il tekrar değiştiyse eski sonucu ekrana basma.
+      if (requestSignature !== latestSignatureRef.current) return
       setAnalysis(result)
     } catch (err) {
+      if (requestSignature !== latestSignatureRef.current) return
       setError('Analiz sırasında bir hata oluştu. Lütfen tekrar deneyin.')
       console.error(err)
     } finally {
-      setLoading(false)
+      if (requestSignature === latestSignatureRef.current) setLoading(false)
     }
   }
+
+  useEffect(() => {
+    setAnalysis(null)
+    setError(null)
+    setLoading(true)
+
+    const timer = window.setTimeout(() => {
+      void runAnalysis(signature)
+    }, 300)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [signature, manualRefreshCount])
+
+  const hasReviews = reviews.length > 0
+  const displayError = error ?? (!hasReviews ? 'Analiz için en az bir yorum gerekli' : null)
 
   const getScoreLabel = (score: number) => {
     if (score >= 5) return 'Mükemmel'
@@ -58,20 +99,18 @@ export default function HotelAnalysisCard({ reviews }: HotelAnalysisCardProps) {
     <div className="hotel-analysis-card">
       <div className="card-header">
         <h3>Yapay Zeka Analizi</h3>
-        {!analysis && (
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className="analyze-button"
-          >
-            {loading ? 'Analiz ediliyor...' : 'Analiz Et'}
-          </button>
-        )}
+        <button
+          onClick={() => setManualRefreshCount((prev) => prev + 1)}
+          disabled={loading}
+          className="analyze-button"
+        >
+          {loading ? 'Analiz ediliyor...' : analysis ? 'Yenile' : 'Analiz Et'}
+        </button>
       </div>
 
-      {error && (
+      {displayError && (
         <div className="error-message">
-          <p>⚠️ {error}</p>
+          <p>⚠️ {displayError}</p>
         </div>
       )}
 
@@ -81,64 +120,102 @@ export default function HotelAnalysisCard({ reviews }: HotelAnalysisCardProps) {
         </div>
       )}
 
-      {analysis && (
+      {analysis && !loading && (
         <div className="analysis-results">
-          {/* Skorlar Grid */}
           <div className="scores-grid">
-            {/* Temizlik Skoru */}
-            <div className="score-card score-card-green">
-              <div className="score-header">
-                <span className="score-label">🧹 Temizlik</span>
-                <span className="score-value">{analysis.cleaning_score}/5</span>
-              </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill progress-fill-green"
-                  style={{ width: `${(analysis.cleaning_score / 5) * 100}%` }}
-                ></div>
-              </div>
-              <p className="score-text">{getScoreLabel(analysis.cleaning_score)}</p>
-              <p className="score-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
-                {getStarRating(analysis.cleaning_score)}
-              </p>
-            </div>
+            {[
+              {
+                label: '🧹 Temizlik',
+                value: analysis.cleaning_score ?? 3,
+                cardClass: 'score-card-green',
+                barClass: 'progress-fill-green',
+              },
+              {
+                label: '🤫 Sessizlik',
+                value: analysis.quietness_score ?? 3,
+                cardClass: 'score-card-purple',
+                barClass: 'progress-fill-purple',
+              },
+              {
+                label: '🧑‍🍳 Hizmet',
+                value: analysis.service_score ?? 3,
+                cardClass: 'score-card-blue',
+                barClass: 'progress-fill-blue',
+              },
+              {
+                label: '🗺️ Konum',
+                value: analysis.location_score ?? 3,
+                cardClass: 'score-card-teal',
+                barClass: 'progress-fill-teal',
+              },
+              {
+                label: '📶 Wi-Fi',
+                value: analysis.wifi_score ?? 3,
+                cardClass: 'score-card-yellow',
+                barClass: 'progress-fill-yellow',
+              },
+              {
+                label: '🍳 Kahvaltı',
+                value: analysis.breakfast_score ?? 3,
+                cardClass: 'score-card-pink',
+                barClass: 'progress-fill-pink',
+              },
+              {
+                label: '👨‍👩‍👧 Aile',
+                value: analysis.family_friendly_score ?? 3,
+                cardClass: 'score-card-orange',
+                barClass: 'progress-fill-orange',
+              },
+              {
+                label: '🏊 Eğlence',
+                value: analysis.entertainment_score ?? 3,
+                cardClass: 'score-card-indigo',
+                barClass: 'progress-fill-indigo',
+              },
+              {
+                label: '🛏️ Konfor',
+                value: analysis.room_comfort_score ?? 3,
+                cardClass: 'score-card-sand',
+                barClass: 'progress-fill-sand',
+              },
+              {
+                label: '💸 Fiyat/Değer',
+                value: analysis.value_for_money_score ?? 3,
+                cardClass: 'score-card-lilac',
+                barClass: 'progress-fill-lilac',
+              },
+            ].map((card) => (
+              <div key={card.label} className={`score-card ${card.cardClass}`}>
+                <div className="score-header">
+                  <span className="score-label">{card.label}</span>
+                  <span className="score-value">{card.value}/5</span>
+                </div>
+                <div className="progress-bar">
+                  <div
+                    className={`progress-fill ${card.barClass}`}
+                    style={{ width: `${(card.value / 5) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="score-text">{getScoreLabel(card.value)}</p>
+                <p className="score-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
+                  {getStarRating(card.value)}
+                </p>
 
-            {/* Sessizlik Skoru */}
-            <div className="score-card score-card-purple">
-              <div className="score-header">
-                <span className="score-label">🤫 Sessizlik</span>
-                <span className="score-value">{analysis.quietness_score}/5</span>
+                {card.label === '👨‍👩‍👧 Aile' ? (
+                  <div
+                    className={`playground-indicator ${analysis.has_playground ?? false ? 'has-playground' : 'no-playground'}`}
+                  >
+                    <span className="icon">{analysis.has_playground ?? false ? '✅' : '❌'}</span>
+                    <span>
+                      {analysis.has_playground ?? false ? 'Oyun Alanı Var' : 'Oyun Alanı Bilgisi Bulunamadı'}
+                    </span>
+                  </div>
+                ) : null}
               </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill progress-fill-purple"
-                  style={{ width: `${(analysis.quietness_score / 5) * 100}%` }}
-                ></div>
-              </div>
-              <p className="score-text">{getScoreLabel(analysis.quietness_score)}</p>
-              <p className="score-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
-                {getStarRating(analysis.quietness_score)}
-              </p>
-            </div>
-
-            {/* Çocuk Parkı */}
-            <div className="score-card score-card-orange">
-              <div className="score-header">
-                <span className="score-label">🎠 Çocuk Parkı</span>
-                <span className="score-value" style={{ fontSize: '1.5rem' }}>
-                  {analysis.has_playground ? '✓' : '✗'}
-                </span>
-              </div>
-              <div className={`playground-indicator ${analysis.has_playground ? 'has-playground' : 'no-playground'}`}>
-                <span className="icon">{analysis.has_playground ? '✅' : '❌'}</span>
-                <span>{analysis.has_playground ? 'Oyun Alanı Var' : 'Bilgi Bulunamadı'}</span>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Pros ve Cons */}
           <div className="pros-cons-grid">
-            {/* Olumlu Özellikler */}
             <div className="pros-cons-card pros-card">
               <h4>
                 <span className="bullet">💚</span> Olumlu Özellikler
@@ -153,7 +230,6 @@ export default function HotelAnalysisCard({ reviews }: HotelAnalysisCardProps) {
               </ul>
             </div>
 
-            {/* Olumsuz Özellikler */}
             <div className="pros-cons-card cons-card">
               <h4>
                 <span className="bullet">💔</span> Olumsuz Özellikler
@@ -168,25 +244,14 @@ export default function HotelAnalysisCard({ reviews }: HotelAnalysisCardProps) {
               </ul>
             </div>
           </div>
-
-          {/* Yeniden Analiz Butonu */}
-          <div className="reanalyze-section">
-            <button
-              onClick={handleAnalyze}
-              disabled={loading}
-              className="reanalyze-button"
-            >
-              🔄 Yeniden Analiz Et
-            </button>
-          </div>
         </div>
       )}
 
-      {!analysis && !loading && !error && (
+      {!analysis && !loading && !displayError && (
         <div className="empty-state">
           <span className="empty-icon">🔍</span>
-          <p className="empty-text">Otel yorumlarını yapay zeka ile analiz edin</p>
-          <p className="empty-subtext">Temizlik, sessizlik, çocuk parkı ve özellik analizi</p>
+          <p className="empty-text">Otel yorumları analiz ediliyor...</p>
+          <p className="empty-subtext">Soru cevaplarını değiştirdiğinde skorlar otomatik güncellenir</p>
         </div>
       )}
     </div>

@@ -29,5 +29,5 @@ async def analyze_hotel_reviews(request: HotelAnalysisRequest) -> dict[str, Any]
     Returns:
         Analiz sonucu JSON formatında
     """
-    result = _service.analyze_reviews(request.reviews)
+    result = _service.analyze_reviews(request.reviews, request.preferences)
     return result

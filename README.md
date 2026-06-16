@@ -1,47 +1,69 @@
-# Velo — AI-Powered Hotel Review Analyzer
+# VibeCheck Monorepo
 
-Velo (VibeCheck), otel yorumlarını yapay zeka ile 6 kritere göre puanlayıp özetleyen web uygulamasıdır. Seyahat eden kullanıcılar yüzlerce yorum arasında kaybolmak yerine, kendi önceliklerine göre hızlı karar verebilir.
+VibeCheck, otel yorumlarını AI destekli analiz eden ve kullanıcı tercihleriyle eşleştirerek karar desteği veren bir web uygulamasıdır.
 
-## Canlı Demo
+Bu repo **monorepo** yapısındadır:
+- `frontend/` -> React + Vite (Vercel'e deploy edilir)
+- `backend/` -> FastAPI (Render'a deploy edilir)
+- `prodocs/` -> Jüri teslimi için zorunlu ürün dokümantasyonu (`PRD`, `tech-stack`, `Plan`, `DesignSystem`, `Progress`)
 
-| Servis | URL |
-|--------|-----|
-| Frontend | `https://YOUR-VERCEL-APP.vercel.app` *(deploy sonrası güncelleyin)* |
-| Backend API | `https://YOUR-RENDER-SERVICE.onrender.com` *(deploy sonrası güncelleyin)* |
-| API Docs | `https://YOUR-RENDER-SERVICE.onrender.com/docs` |
+## Onepager Deployment Rehberi
 
-## Özellikler
+### 1) Frontend Deployment (Vercel)
+- Platform: [Vercel](https://vercel.com/)
+- Import: GitHub repo
+- **Root Directory: `frontend` (zorunlu)**
+- Build Command: `npm run build`
+- Output Directory: `dist`
+- Environment Variables:
+  - `VITE_API_BASE_URL=https://<render-backend-url>`
+  - `VITE_DATA_SOURCE=live` (veya demo mod için `demo`)
 
-- **Velo AI Analiz:** Otel yorumlarını Gemini ile 6 kritere göre puanlama (temizlik, aile dostu, yemek, konum, hizmet, fiyat/performans)
-- **VibeCheck Prototype:** Persona onboarding, Truth Dashboard, Smart Score, Vibe-Map
-- **OpenAI NLP:** Tekil yorum analizi, TL;DR özet ve sentiment skorları
-- **REST API:** Frontend'den bağımsız, mobil/web istemcilerine hizmet verebilir yapı
+### 2) Backend Deployment (Render)
+- Platform: [Render](https://render.com/)
+- Service Type: Web Service (Python)
+- **Root Directory: `backend` (zorunlu)**
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Environment Variables (örnek):
+  - `GEMINI_API_KEY=...`
+  - `FOURSQUARE_API_KEY=...`
+  - `DATABASE_URL=...` (prod için önerilir)
+  - `APP_ENV=production`
 
-## Klasör Yapısı
+### 3) Frontend <-> Backend Bağlantısı
+- Render deploy URL'sini alın (ör. `https://vibecheck-api.onrender.com`)
+- Vercel'de `VITE_API_BASE_URL` değerini bu URL ile güncelleyin
+- Backend health kontrolü:
+  - `GET https://<render-url>/health`
+- API docs:
+  - `https://<render-url>/docs`
 
-```
-/frontend   → React + Vite arayüz
-/backend    → FastAPI + SQLAlchemy API
-/prodocs    → AI ajanları için geliştirme referansları
-PRD.md      → Ürün gereksinimleri
-tech-stack.md, Plan.md, DesignSystem.md, Progress.md
-```
+### 4) Jüri Teslim Kontrol Listesi
+- Monorepo ayrımı net:
+  - Frontend sadece `frontend/`
+  - Backend sadece `backend/`
+- Gizli anahtarlar Git'e gitmez:
+  - `backend/.env` ve `frontend/.env` ignore edilir
+- Şablon env dosyaları mevcut:
+  - `backend/.env.example`
+  - `frontend/.env.example`
+- `prodocs/` belgeleri güncel:
+  - `PRD.md`, `tech-stack.md`, `Plan.md`, `DesignSystem.md`, `Progress.md`
 
-## Yerel Kurulum
+## Yerel Geliştirme
 
 ### Backend
-
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # GEMINI_API_KEY ve OPENAI_API_KEY ekleyin
+cp .env.example .env
 uvicorn app.main:app --reload
 ```
 
 ### Frontend
-
 ```bash
 cd frontend
 npm install
@@ -49,32 +71,6 @@ cp .env.example .env
 npm run dev
 ```
 
-Tarayıcı: `http://localhost:5173` — API: `http://localhost:8000`
+## Güvenlik Notu
 
-## Deploy
-
-### Backend (Render)
-
-1. [render.com](https://render.com) → New Blueprint → repo'yu bağla
-2. `render.yaml` otomatik algılanır
-3. Environment Variables: `GEMINI_API_KEY`, isteğe bağlı `OPENAI_API_KEY`
-4. Deploy tamamlanınca URL'yi kopyala (ör. `https://velo-api.onrender.com`)
-
-### Frontend (Vercel)
-
-1. [vercel.com](https://vercel.com) → Import Git Repository
-2. Root Directory: `frontend`
-3. Environment Variable: `VITE_API_BASE_URL=https://velo-api.onrender.com`
-4. Deploy
-
-## Ortam Değişkenleri
-
-Kök `.env.example` dosyasına bakın. **Gerçek API anahtarlarını asla commit etmeyin.**
-
-## Demo Video
-
-5 dakikalık demo videosu Loom/YouTube'da paylaşılmalıdır. İçerik: problem, çözüm, mimari, canlı demo, tech stack, rekabet farkı, gelecek planları.
-
-## Lisans
-
-Eğitim projesi — 2026
+`.env` dosyaları commit edilmez. Sadece `.env.example` şablonları repo içinde tutulur.

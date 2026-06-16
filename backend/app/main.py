@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.error_handlers import register_exception_handlers
@@ -9,6 +10,8 @@ from app.db.session import AsyncSessionLocal, init_db
 from app.routers.engagement_routes import router as engagement_router
 from app.routers.hotel_analysis_routes import router as hotel_analysis_router
 from app.routers.hotels_routes import router as hotels_router
+from app.routers.mvp_routes import router as mvp_router
+from app.routers.places_routes import router as places_router
 from app.routers.reviews_routes import router as reviews_router
 from app.routers.users_routes import router as users_router
 from app.routers.vibe_map_routes import router as vibe_map_router
@@ -33,6 +36,18 @@ app = FastAPI(
 app.debug = settings.debug
 
 app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 register_exception_handlers(app)
 
 
@@ -47,3 +62,5 @@ app.include_router(reviews_router)
 app.include_router(vibe_map_router)
 app.include_router(engagement_router)
 app.include_router(hotel_analysis_router)
+app.include_router(places_router)
+app.include_router(mvp_router)
