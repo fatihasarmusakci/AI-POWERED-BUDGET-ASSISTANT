@@ -4,6 +4,22 @@ Proje geliştirme günlüğü: yapılan işler, kararlar ve karşılaşılan hat
 
 ---
 
+## 2026-06-16 — Repo teslim düzeni
+
+### Yapılanlar
+- Zorunlu dokümanlar `prodocs/` altına taşındı: PRD, tech-stack, Plan, DesignSystem, Progress
+- `prodocs/PRD.md` oluşturuldu
+- Kök `.env.example` eklendi
+- `.gitignore` genişletildi (`*.db`, `__pycache__`, `node_modules`, `.env`)
+- `README.md` teslim formatına göre güncellendi (monorepo + deploy onepager)
+- CORS fix: `allow_origins=["*"]` (Vercel ↔ Render)
+
+### Kararlar
+- Dokümanlar kökte değil `prodocs/` içinde tutulacak (jüri brief uyumu)
+- SQLite dosyaları repodan çıkarıldı (local dev artifact)
+
+---
+
 ## 2026-06-14 — Teslim hazırlığı
 
 ### Yapılanlar

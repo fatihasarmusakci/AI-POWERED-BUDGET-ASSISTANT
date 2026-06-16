@@ -1,6 +1,43 @@
-backend/.env
-frontend/.env
+# Ortam değişkenleri (gerçek anahtarlar asla commit edilmez)
+.env
 **/.env
+!.env.example
+!**/.env.example
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
 .venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Veritabanı
+*.db
+*.sqlite
+*.sqlite3
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build / log
+*.log
+dist/
+build/
+coverage/
+
+# Cursor (opsiyonel — yerel IDE ayarları)
+.cursor/

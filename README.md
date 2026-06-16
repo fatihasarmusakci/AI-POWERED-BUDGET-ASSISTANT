@@ -1,59 +1,63 @@
-# VibeCheck Monorepo
+# VibeCheck — AI Destekli Otel Seçim Asistanı
 
-VibeCheck, otel yorumlarını AI destekli analiz eden ve kullanıcı tercihleriyle eşleştirerek karar desteği veren bir web uygulamasıdır.
+VibeCheck, tatil planlayan kullanıcıların otel yorumlarını yapay zeka ile analiz edip kişisel tercihlerine göre otel öneren bir web uygulamasıdır.
 
-Bu repo **monorepo** yapısındadır:
-- `frontend/` -> React + Vite (Vercel'e deploy edilir)
-- `backend/` -> FastAPI (Render'a deploy edilir)
-- `prodocs/` -> Jüri teslimi için zorunlu ürün dokümantasyonu (`PRD`, `tech-stack`, `Plan`, `DesignSystem`, `Progress`)
+## Repo Yapısı (Monorepo)
+
+```text
+PlanGo/
+├── frontend/          # React + Vite arayüz (Vercel deploy)
+├── backend/           # FastAPI REST API (Render deploy)
+├── prodocs/           # Zorunlu teslim dokümanları + AI referansları
+│   ├── PRD.md
+│   ├── tech-stack.md
+│   ├── Plan.md
+│   ├── DesignSystem.md
+│   ├── Progress.md
+│   ├── architecture.md
+│   └── api-reference.md
+├── .gitignore
+├── .env.example       # Kök env şablonu (gerçek key yok)
+├── README.md          # Bu dosya
+└── render.yaml        # Render blueprint (backend)
+```
+
+## Ne Yapar?
+
+1. Kullanıcı il seçer ve tatil tercihlerini yazar
+2. Oteller kriterlere göre sıralanır
+3. Yapay zeka otel yorumlarını 10 kategoride skorlar
+4. Kullanıcı beğendiği otelde harita üzerinden rezervasyona yönlendirilir
 
 ## Onepager Deployment Rehberi
 
-### 1) Frontend Deployment (Vercel)
-- Platform: [Vercel](https://vercel.com/)
-- Import: GitHub repo
-- **Root Directory: `frontend` (zorunlu)**
-- Build Command: `npm run build`
-- Output Directory: `dist`
-- Environment Variables:
-  - `VITE_API_BASE_URL=https://<render-backend-url>`
-  - `VITE_DATA_SOURCE=live` (veya demo mod için `demo`)
+### Frontend — Vercel
 
-### 2) Backend Deployment (Render)
-- Platform: [Render](https://render.com/)
-- Service Type: Web Service (Python)
-- **Root Directory: `backend` (zorunlu)**
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Environment Variables (örnek):
-  - `GEMINI_API_KEY=...`
-  - `FOURSQUARE_API_KEY=...`
-  - `DATABASE_URL=...` (prod için önerilir)
-  - `APP_ENV=production`
+| Ayar | Değer |
+|------|-------|
+| Root Directory | `frontend` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Env | `VITE_API_BASE_URL=https://<render-backend-url>` |
 
-### 3) Frontend <-> Backend Bağlantısı
-- Render deploy URL'sini alın (ör. `https://vibecheck-api.onrender.com`)
-- Vercel'de `VITE_API_BASE_URL` değerini bu URL ile güncelleyin
-- Backend health kontrolü:
-  - `GET https://<render-url>/health`
-- API docs:
-  - `https://<render-url>/docs`
+### Backend — Render
 
-### 4) Jüri Teslim Kontrol Listesi
-- Monorepo ayrımı net:
-  - Frontend sadece `frontend/`
-  - Backend sadece `backend/`
-- Gizli anahtarlar Git'e gitmez:
-  - `backend/.env` ve `frontend/.env` ignore edilir
-- Şablon env dosyaları mevcut:
-  - `backend/.env.example`
-  - `frontend/.env.example`
-- `prodocs/` belgeleri güncel:
-  - `PRD.md`, `tech-stack.md`, `Plan.md`, `DesignSystem.md`, `Progress.md`
+| Ayar | Değer |
+|------|-------|
+| Root Directory | `backend` |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Env | `GEMINI_API_KEY`, `FOURSQUARE_API_KEY` (bkz. `backend/.env.example`) |
 
-## Yerel Geliştirme
+### Bağlantı Testi
+
+- Health: `GET https://<backend-url>/health`
+- API Docs: `https://<backend-url>/docs`
+
+## Yerel Kurulum
 
 ### Backend
+
 ```bash
 cd backend
 python3 -m venv .venv
@@ -64,6 +68,7 @@ uvicorn app.main:app --reload
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -71,6 +76,24 @@ cp .env.example .env
 npm run dev
 ```
 
-## Güvenlik Notu
+Tarayıcı: `http://localhost:5173` — API: `http://localhost:8000`
 
-`.env` dosyaları commit edilmez. Sadece `.env.example` şablonları repo içinde tutulur.
+## Güvenlik
+
+- `backend/.env` ve `frontend/.env` Git'e **yüklenmez**
+- Sadece `.env.example` şablonları repoda tutulur
+- LLM API anahtarları yalnızca backend tarafında kullanılır
+
+## Teslim Dokümanları
+
+Tüm zorunlu belgeler `prodocs/` klasöründedir:
+
+- [PRD.md](prodocs/PRD.md) — Problem, hedef kitle, özellikler
+- [tech-stack.md](prodocs/tech-stack.md) — Teknoloji seçimleri ve AI kullanımı
+- [Plan.md](prodocs/Plan.md) — Kullanıcı hikayeleri ve teknik adımlar
+- [DesignSystem.md](prodocs/DesignSystem.md) — Renk, tipografi, component kuralları
+- [Progress.md](prodocs/Progress.md) — Geliştirme günlüğü
+
+## Lisans
+
+Eğitim projesi — Future Talent 2026
