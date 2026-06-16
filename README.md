@@ -93,6 +93,7 @@ Tüm zorunlu belgeler `prodocs/` klasöründedir:
 - [Plan.md](prodocs/Plan.md) — Kullanıcı hikayeleri ve teknik adımlar
 - [DesignSystem.md](prodocs/DesignSystem.md) — Renk, tipografi, component kuralları
 - [Progress.md](prodocs/Progress.md) — Geliştirme günlüğü
+- [TESLIM-KONTROL.md](prodocs/TESLIM-KONTROL.md) — Jüri teslim kontrol listesi
 
 ## Lisans
 

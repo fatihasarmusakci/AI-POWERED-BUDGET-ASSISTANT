@@ -12,6 +12,7 @@ Proje geliştirme günlüğü: yapılan işler, kararlar ve karşılaşılan hat
 - Kök `.env.example` eklendi
 - `.gitignore` genişletildi (`*.db`, `__pycache__`, `node_modules`, `.env`)
 - `README.md` teslim formatına göre güncellendi (monorepo + deploy onepager)
+- `prodocs/TESLIM-KONTROL.md` eklendi (jüri kontrol listesi)
 - CORS fix: `allow_origins=["*"]` (Vercel ↔ Render)
 
 ### Kararlar
